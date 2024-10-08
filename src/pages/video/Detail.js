@@ -8,16 +8,55 @@ import {
   fetchVideos,
 } from "../../reducers/videoReducer";
 
+import {
+  initState as subscribeState,
+  subscribe,
+  unsubscribe,
+  subCount,
+  subscribeReducer,
+  fetchSub,
+} from "../../reducers/subscribeReducer";
+
+import { useAuth } from "../../contexts/AuthContext";
+
 const Detail = () => {
   const { videoCode } = useParams();
+  const { token } = useAuth();
   const [state, dispatch] = useReducer(videoReducer, videoState);
+  const [subState, subDispatch] = useReducer(subscribeReducer, subscribeState);
 
   const { video, videos } = state;
+  const { isSub, count, sub } = subState;
+
+  const handleSub = () => {
+    if (isSub) {
+      // 구독중 -> 구독 취소
+      unsubscribe(subDispatch, sub.subCode);
+    } else {
+      // 구독 -> 구독
+      subscribe(subDispatch, { channelCode: video.channel.channelCode });
+    }
+  };
 
   useEffect(() => {
     fetchVideo(dispatch, videoCode);
     fetchVideos(dispatch, 1, "");
+    subCount(subDispatch);
   }, []);
+
+  // 시점이 다를때마다 추가
+  useEffect(() => {
+    if (video != null) {
+      subCount(subDispatch, video.channel.channelCode);
+      fetchSub(subDispatch, video.channel.channelCode);
+    }
+  }, [video]);
+
+  useEffect(() => {
+    if (token != null) {
+      fetchSub(subDispatch, video.channel.channelCode);
+    }
+  }, [token, video]);
 
   return (
     <main className="detail">
@@ -29,9 +68,9 @@ const Detail = () => {
             <img src={video?.channel.channelImg} />
             <div className="channel-desc">
               <h3>{video?.channel.channelName}</h3>
-              <p>구독자 명</p>
+              <p>구독자 {count}명</p>
             </div>
-            <button>구독</button>
+            <button onClick={handleSub}>{isSub ? "구독중" : "구독"}</button>
           </div>
         </div>
         <div className="video-detail-info">{video?.videoDesc}</div>
