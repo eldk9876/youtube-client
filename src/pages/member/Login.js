@@ -17,7 +17,7 @@ const Login = () => {
       if (result.status === 200) {
         authLogin(result.data);
         alert("로그인 성공!");
-        navigate("/");
+        navigate("/"); // <- window 변경
       }
     } catch {
       alert("로그인 실패!");

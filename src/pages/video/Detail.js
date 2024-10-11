@@ -7,57 +7,63 @@ import {
   fetchVideo,
   fetchVideos,
 } from "../../reducers/videoReducer";
-
+import { useDispatch, useSelector } from "react-redux";
 import {
-  initState as subscribeState,
   subscribe,
   unsubscribe,
   subCount,
-  subscribeReducer,
   fetchSub,
-} from "../../reducers/subscribeReducer";
-
+} from "../../store/subscribeSlice";
+import { createComment, fetchComments } from "../../store/commentSlice";
 import { useAuth } from "../../contexts/AuthContext";
-
+import { useState } from "react";
+import Comment from "../../components/Comment";
 const Detail = () => {
   const { videoCode } = useParams();
-  const { token } = useAuth();
-  const [state, dispatch] = useReducer(videoReducer, videoState);
-  const [subState, subDispatch] = useReducer(subscribeReducer, subscribeState);
-
+  const { token, id } = useAuth();
+  const comments = useSelector((state) => state.comment.comments);
+  const [isComment, setIsComment] = useState(false);
+  const [newComment, setNewComment] = useState({
+    commentText: "",
+    videoCode: videoCode,
+    id: id,
+  });
+  // 리듀서 방식 - 리덕스 툴킷 사용하는 방식으로 변경해보셔도 괜찮아요!
+  // 실제 프로젝트에서는 하나로 통일해주세요! -> 만약 쓰신다면 리덕스 툴킷 사용!
+  const [state, videoDispatch] = useReducer(videoReducer, videoState);
   const { video, videos } = state;
-  const { isSub, count, sub } = subState;
-
+  // 리덕스 툴킷 방식 - 구독
+  const dispatch = useDispatch();
+  const isSub = useSelector((state) => state.subscribe.isSub);
+  const count = useSelector((state) => state.subscribe.count);
+  const sub = useSelector((state) => state.subscribe.sub);
   const handleSub = () => {
     if (isSub) {
-      // 구독중 -> 구독 취소
-      unsubscribe(subDispatch, sub.subCode);
+      dispatch(unsubscribe(sub.subCode));
     } else {
       // 구독 -> 구독
-      subscribe(subDispatch, { channelCode: video.channel.channelCode });
+      dispatch(subscribe({ channelCode: video.channel.channelCode }));
     }
   };
-
+  // 댓글 추가
+  const addComment = () => {
+    dispatch(createComment(newComment));
+    setIsComment(false);
+    setNewComment({ ...newComment, commentText: "" });
+  };
   useEffect(() => {
-    fetchVideo(dispatch, videoCode);
-    fetchVideos(dispatch, 1, "");
-    subCount(subDispatch);
+    fetchVideo(videoDispatch, videoCode);
+    fetchVideos(videoDispatch, 1, "");
+    dispatch(fetchComments(videoCode));
   }, []);
-
-  // 시점이 다를때마다 추가
   useEffect(() => {
     if (video != null) {
-      subCount(subDispatch, video.channel.channelCode);
-      fetchSub(subDispatch, video.channel.channelCode);
+      dispatch(subCount(video.channel.channelCode));
+      if (token != null) {
+        dispatch(fetchSub(video.channel.channelCode));
+      }
     }
-  }, [video]);
-
-  useEffect(() => {
-    if (token != null) {
-      fetchSub(subDispatch, video.channel.channelCode);
-    }
-  }, [token, video]);
-
+  }, [video, token]);
   return (
     <main className="detail">
       <div className="video-detail">
@@ -74,6 +80,33 @@ const Detail = () => {
           </div>
         </div>
         <div className="video-detail-info">{video?.videoDesc}</div>
+        <div className="comment">
+          <input
+            className="comment-add"
+            type="text"
+            placeholder="댓글 추가.."
+            value={newComment.commentText}
+            onChange={(e) =>
+              setNewComment({ ...newComment, commentText: e.target.value })
+            }
+            onClick={() => setIsComment(true)}
+          />
+          {isComment && (
+            <div className="comment-add-status">
+              <button onClick={() => setIsComment(false)}>취소</button>
+              <button onClick={addComment}>댓글</button>
+            </div>
+          )}
+          <div className="comment-list">
+            {comments.map((comment) => (
+              <Comment
+                comment={comment}
+                videoCode={videoCode}
+                key={comment.commentCode}
+              />
+            ))}
+          </div>
+        </div>
       </div>
       <div className="video-list">
         {videos.map((video) => (

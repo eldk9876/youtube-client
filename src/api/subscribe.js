@@ -17,7 +17,7 @@ const authorize = axios.create({
 
 //"http://localhost:8080/api/private/sub/2"
 export const getSub = async (channelCode) => {
-  return await authorize.get(`sub/${channelCode}`);
+  return await authorize.get(`sub/${channelCode}/count`);
 };
 
 // 생성 무엇이 필요한가???
