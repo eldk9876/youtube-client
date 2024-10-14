@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  createComment,
-  deleteComment,
-  modifyComment,
-  removeComment,
-} from "../store/commentSlice";
+// import { useDispatch, useSelector } from "react-redux"; 
+// import {
+//   createComment,
+//   modifyComment,
+//   removeComment,
+// } from "../store/commentSlice"; // 리덕스 사용
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { addComment, updateComment, deleteComment as delComment } from "../api/comment";
+
+
 const Comment = ({ comment, videoCode }) => {
-  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  // const dispatch = useDispatch();
   const { id } = useAuth();
-  const comments = useSelector((state) => state.comment.comments);
   const [newReply, setNewReply] = useState({
     commentCode: 0,
     commentText: "",
@@ -18,39 +21,77 @@ const Comment = ({ comment, videoCode }) => {
     id: id,
     parentCode: 0,
   });
-  const [isEdit, setIsEdit] = useState(false);
+
+
+
+  // 댓글 추가
+  const addmutation = useMutation({
+    mutationFn: addComment,
+    onSuccess: () => {                // onSuccess <- 성공했을때
+        queryClient.invalidateQueries({queryKey: ["comments", videoCode]});
+    },
+  });
+
+    // 댓글 추가
+    const editmutation = useMutation({
+      mutationFn: updateComment,
+      onSuccess: () => {                // onSuccess <- 성공했을때
+          queryClient.invalidateQueries({queryKey: ["comments", videoCode]});
+      },
+    });
+
+      // 댓글 추가
+  const delmutation = useMutation({
+    mutationFn: delComment,
+    onSuccess: () => {                // onSuccess <- 성공했을때
+        queryClient.invalidateQueries({queryKey: ["comments", videoCode]});
+    },
+  });
+
 
   // 대댓글 추가
   const addReply = () => {
-    dispatch(createComment(newReply));
+    addmutation.mutate(newReply);
     setNewReply({ ...newReply, commentText: "", parentCode: 0 });
   };
   const deleteComment = (commentCode) => {
-    dispatch(removeComment({ videoCode, commentCode })); // 명칭 가능할시 dispatch(removeComment({videoCode : videoCode, commentCode: commentCode}))생략 가능
+    // dispatch(removeComment({ videoCode, commentCode })); // 명칭 가능할시 dispatch(removeComment({videoCode : videoCode, commentCode: commentCode}))생략 가능 리덕스
+    delmutation.mutate({ commentCode });
   };
 
-  const edit = (commentId, commentText) => {
+
+  const edit = (commentId, commentText, commentCode) => {
     if (id === commentId) {
-      setIsEdit(true);
-      setNewReply({ ...newReply, commentText });
+      setNewReply({ ...newReply, commentText, commentCode });
     }
   };
   const editCancle = () => {
-    setIsEdit(false);
     setNewReply({ ...newReply, commentText: "", commentCode: 0 });
   };
 
   const editSubmit = () => {
-    dispatch(modifyComment(newReply));
+    editmutation.mutate(newReply);
+    // dispatch(modifyComment(newReply));
     editCancle();
   };
 
+
+    // 데이터 로딩 중일 때 처리
+    if (isLoading) return <>로딩중..</>;
+
+    // 에러 발생 했을 때 처리
+    if (error) return <>에러 </>;
+
+
   return (
-    <div className="comment-list">
-      {comments.map((comment) => (
         <div className="comment-content">
+          {comment.delete ? ( <p> 삭제된 댓글입니다..</p> 
+          ) : (
+            <>
+            {""}
+
           <h4>{comment.id}</h4>
-          {isEdit ? (
+          {newReply.commentCode === comment.commentCode ? (
             <>
               <input
                 type="text"
@@ -69,7 +110,7 @@ const Comment = ({ comment, videoCode }) => {
               </div>
             </>
           ) : (
-            <p onClick={() => edit(comment.id)}>{comment.commentText}</p>
+            <p onClick={() => edit(comment.id)}>{comment.commentText, comment.commentCode}</p>
           )}
 
           <button
@@ -86,7 +127,13 @@ const Comment = ({ comment, videoCode }) => {
             <button onClick={() => deleteComment(comment.commentCode)}>
               삭제
             </button>
+            
           )}
+   </>
+
+
+
+          
           {newReply.parentCode === comment.commentCode && (
             <>
               <input
