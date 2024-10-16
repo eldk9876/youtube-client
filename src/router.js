@@ -6,7 +6,7 @@ import Signup from "./pages/member/Signup";
 import LoginSuccess from "./components/LoginSuccess";
 import Count from "./components/Count";
 import Detail from "./pages/video/Detail";
-import Video from "./pages/video/video";
+import Video from "./pages/video/Video";
 
 const router = createBrowserRouter([
   {

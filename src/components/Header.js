@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { IoSunnyOutline } from "react-icons/io5";
+import { GoSun } from "react-icons/go";
 import { FaMoon } from "react-icons/fa";
 
 const StyledHeader = styled.header`
@@ -152,7 +152,7 @@ const Header = ({ onUpload, onSearch }) => {
             업로드
           </button>
           <button onClick={toggleTheme}>
-            {theme === "light" ? <FaMoon /> : <IoSunnyOutline />}
+            {theme === "light" ? <FaMoon /> : <GoSun />}
           </button>
         </div>
       </StyledHeader>

@@ -16,7 +16,7 @@ const StyledDiv = styled.div`
     font-size: 3rem;
     background-color: black;
     color: white;
-    border-redius: 5px;
+    border-radius: 5px;
   }
 `;
 
@@ -38,7 +38,7 @@ const Count = () => {
   const dispatch = useDispatch();
 
   // useSelector : 리덕스 스토어에서 상태를 가져오는 훅
-  useSelector((state) => state.count.count);
+  const count = useSelector((state) => state.count.count);
 
   return (
     <StyledDiv>

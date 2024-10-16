@@ -20,10 +20,9 @@ import { useState } from "react";
 import Comment from "../../components/Comment";
 
 // 리액트 쿼리(React Query)
-//  서버에 데이터에 특화되어 비동기 작업을 훨씬 쉽게 처리할 수 있는 라이브러리
+// 서버에 데이터에 특화되어 비동기 작업을 훨씬 쉽게 처리할 수 있는 라이브러리
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { addComment, viewComments } from "../../api/comment";
+import { addComment as addCommentAPI, viewComments } from "../../api/comment";
 
 const Detail = () => {
   const { videoCode } = useParams();
@@ -40,12 +39,13 @@ const Detail = () => {
   // 실제 프로젝트에서는 하나로 통일해주세요! -> 만약 쓰신다면 리덕스 툴킷 사용!
   const [state, videoDispatch] = useReducer(videoReducer, videoState);
   const { video, videos } = state;
+
   // 리덕스 툴킷 방식 - 구독
   const dispatch = useDispatch();
+
   const isSub = useSelector((state) => state.subscribe.isSub);
   const count = useSelector((state) => state.subscribe.count);
   const sub = useSelector((state) => state.subscribe.sub);
-  // const comments = useSelector((state) => state.comment.comments); <- 리덕스 방식
 
   // 리액트 쿼리 방식 -> 필수는 아님! 굳이 사용할 필요는 없어요~
   // queryClient : React Query의 캐시를 제어
@@ -59,6 +59,15 @@ const Detail = () => {
   } = useQuery({
     queryKey: ["comments", videoCode],
     queryFn: () => viewComments(videoCode),
+    refetchInterval: 1000, // 1000 = 1초 -> 해당 시간마다 데이터 갱신하여 실시간처럼 처리
+  });
+
+  // 댓글 추가
+  const addMutation = useMutation({
+    mutationFn: addCommentAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", videoCode] });
+    },
   });
 
   const handleSub = () => {
@@ -69,17 +78,19 @@ const Detail = () => {
       dispatch(subscribe({ channelCode: video.channel.channelCode }));
     }
   };
+
   // 댓글 추가
   const addComment = () => {
-    dispatch(createComment(newComment));
+    addMutation.mutate(newComment);
     setIsComment(false);
     setNewComment({ ...newComment, commentText: "" });
   };
+
   useEffect(() => {
     fetchVideo(videoDispatch, videoCode);
     fetchVideos(videoDispatch, 1, "");
-    // dispatch(fetchComments(videoCode)); <- 리덕스 방식에서 사용
   }, []);
+
   useEffect(() => {
     if (video != null) {
       dispatch(subCount(video.channel.channelCode));
@@ -91,9 +102,8 @@ const Detail = () => {
 
   // 데이터 로딩 중일 때 처리
   if (isLoading) return <>로딩중..</>;
-
   // 에러 발생 했을 때 처리
-  if (error) return <>에러 </>;
+  if (error) return <>에러 발생..</>;
 
   return (
     <main className="detail">

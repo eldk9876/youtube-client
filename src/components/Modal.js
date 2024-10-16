@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { addVideo } from "../api/video";
 
-const Modal = ({ isOpen, onClose }) => {
+const Modal = ({ isOpen, onClose, onUpload }) => {
   const [video, setVideo] = useState({
     videoFile: null,
     imageFile: null,
     videoTitle: "",
+    videoDesc: "",
     channelCode: 2,
   });
   if (!isOpen) return null;
@@ -15,7 +16,7 @@ const Modal = ({ isOpen, onClose }) => {
     formData.append("videoFile", video.videoFile);
     formData.append("imageFile", video.imageFile);
     formData.append("videoTitle", video.videoTitle);
-    formData.append("videoDEsc", video.videoDesc);
+    formData.append("videoDesc", video.videoDesc);
     formData.append("channelCode", video.channelCode);
     const response = await addVideo(formData);
     console.loh(response.data); // 새 비디오 정보
@@ -87,8 +88,6 @@ const Modal = ({ isOpen, onClose }) => {
           <button
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none"
             onClick={upload}
-            onClose={close}
-            onUpload={onUpload}
           >
             업로드
           </button>

@@ -81,7 +81,7 @@ main.detail {
 }
 
 .comment-content {
-  margin-lift: 40px;
+  margin-left: 40px;
 }
 
 .comment-content h4 {
@@ -89,7 +89,7 @@ main.detail {
 }
 
 .comment-content p {
-  margin: 10px;
+  margin: 10px 0;
 }
 
 .comment-content > button {

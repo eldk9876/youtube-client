@@ -16,15 +16,15 @@ export const createComment = createAsyncThunk(
 
 export const modifyComment = createAsyncThunk(
   "comment/modifyComment",
-  async (data) => {
+  async (data, thunkAPI) => {
     await updateComment(data);
-    thunkApi.dispatch(fatchComment(data.videoCode));
+    thunkAPI.dispatch(fetchComments(data.videoCode));
   }
 );
 
 export const removeComment = createAsyncThunk(
   "comment/removeComment",
-  async (commentCode, thunkAPI) => {
+  async (data, thunkAPI) => {
     await deleteComment(data.commentCode);
     thunkAPI.dispatch(fetchComments(data.videoCode));
   }
@@ -32,14 +32,14 @@ export const removeComment = createAsyncThunk(
 
 export const fetchComments = createAsyncThunk(
   "comment/fetchComments",
-  async (video) => {
-    const response = await viewComments(video);
+  async (videoCode) => {
+    const response = await viewComments(videoCode);
     return response.data;
   }
 );
 
 const commentSlice = createSlice({
-  name: "commnet",
+  name: "comment",
   initialState: { comments: [] },
   reducers: {},
   extraReducers: (builder) => {
